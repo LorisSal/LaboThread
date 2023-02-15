@@ -28,7 +28,6 @@ int main()
     char mot[4][15] = {"printf", "cout", "dans", "cible"};
     char nomFichier[4][15] = {"fichier1.txt", "fichier2.txt", "fichier3.txt", "fichier4.txt"};
     int i;
-    // struct data a;
 
 	//etape 2
 
@@ -36,6 +35,8 @@ int main()
     // pthread_create(&thread[1], NULL, FctThread2, NULL);
     // pthread_create(&thread[2], NULL, FctThread3, NULL);
     // pthread_create(&thread[3], NULL, FctThread4, NULL);
+
+    ///////
 
     for(i=0;i<4;i++)
     {
@@ -55,6 +56,9 @@ int main()
     for(i=0;i<4;i++)
         printf("\n compteur = %d\n", *compteur[i]);
 
+    for(i=0;i<4;i++)
+        free(compteur[i]);
+
 	exit(0);	
 }
 
@@ -63,14 +67,20 @@ int main()
 void* FctThread(void *param)
 {
     int fichier;
-    int compteur=0;
-    int i=0, end=0;
+    // int compteur=0;
+
+    int * compteur = (int *)malloc(sizeof(int));
+    *compteur=0;
+
+    int i, j, end=0, ret, length;
     struct data* data = (struct data*) param;
     char buffer[10];
 
-    printf("%d\n", data->nbTab);
+    struct timespec temps = { 2, 000000000 };
 
-    while(end==0)
+    length= strlen(data->mot);
+
+    for(i=0;end==0;i++)
     {
         if((fichier = open(data->nomFichier, O_RDONLY))==-1)
         {
@@ -78,25 +88,45 @@ void* FctThread(void *param)
             exit(1);
         }
 
-        for(i=0;i<data->nbTab;i++)
+        for(j=0;j<data->nbTab;j++)
             printf("\t");
 
         printf("*\n");
 
         lseek(fichier, i, SEEK_SET);
 
-        if(read(fichier, buffer, strlen(data->mot))!=strlen(data->mot))
+        ret = read(fichier, buffer, length);
+        
+        // puts(buffer);
+        // printf("\n%d\n", i);
+        // sleep(1);
+        
+
+        // printf("%d\n", ret);
+        // printf("%d\n", length);
+
+        if(ret != length)
+        {
             end=1;
+        }
+            
 
         close(fichier);
 
         if(strcmp(buffer, data->mot)==0)
-            compteur++;
+        {
+            (*compteur)++;
+        }
+            
 
-        i++;
+        // i++;
     }
 
-    pthread_exit(&compteur);
+    free(data);
+
+    printf("%d\n", *compteur);
+
+    pthread_exit(compteur);
 }
 
 
